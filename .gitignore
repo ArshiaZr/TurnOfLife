@@ -1,0 +1,42 @@
+# Build outputs
+
+\*.o
+\*.obj
+\*.exe
+\*.out
+
+# Executables
+
+turnoflife
+
+# Logs
+
+\*.log
+
+# Temporary files
+
+\*\~
+\*.tmp
+
+# OS files
+
+.DS\_Store
+Thumbs.db
+
+# Editor files
+
+\*.swp
+\*.swo
+
+# Build directories
+
+build/
+bin/
+
+# SDL build artifacts
+
+\*.dSYM
+
+.idea
+
+.env
