@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v4
 
       - name: Cache build
         uses: actions/cache@v3
@@ -28,8 +28,8 @@ jobs:
 
       - name: Run make
         run: |
-          make        # or make all
-          make test   # if you have a test target
+          make
+          make test
 
       - name: Upload build logs
         if: failure()
