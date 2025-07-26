@@ -19,7 +19,7 @@ jobs:
           path: |
             ~/.cache
             build/
-          key: ${{ runner.os }}-build-${{ hashFiles('**/Makefile') }}
+          key: ${{ runner.os }}-build-${{ hashFiles('**/*.c', '**/*.h', '**/Makefile') }}
 
       - name: Install dependencies
         run: |
