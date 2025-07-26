@@ -17,9 +17,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cache
             build/
-          key: ${{ runner.os }}-build-${{ hashFiles('**/Makefile') }}
+            ~/.cache/build-essential
+          key: ${{ runner.os }}-build-${{ hashFiles('**/*.c', '**/*.h', '**/Makefile') }}
 
       - name: Install dependencies
         run: |
