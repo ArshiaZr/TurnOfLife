@@ -26,14 +26,26 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vcpkg-
 
-      - name: Install build tools
+      - name: Install build tools + X/GL/Wayland dev headers
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake ninja-build git
+          sudo apt-get install -y \
+            build-essential cmake ninja-build git pkg-config \
+            # OpenGL
+            mesa-common-dev libgl1-mesa-dev \
+            # X11 stack used by glfw/raylib
+            xorg-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
+            # Wayland stack (glfw may detect this)
+            libwayland-dev wayland-protocols libxkbcommon-dev \
+            # Sound backends often used by raylib/miniaudio
+            libasound2-dev libpulse-dev \
+            # Misc frequently required by deps
+            libdbus-1-dev libudev-dev
 
       - name: Bootstrap vcpkg
         run: |
           git clone https://github.com/microsoft/vcpkg.git
+          git -C vcpkg pull --ff-only
           ./vcpkg/bootstrap-vcpkg.sh
         env:
           VCPKG_FORCE_SYSTEM_BINARIES: 1
@@ -59,6 +71,12 @@ jobs:
             echo "No tests defined. Skipping ctest."
             touch test-report.xml
           fi
+
+      # If anything above fails, dump vcpkg's glfw logs for quick diagnosis
+      - name: Show vcpkg glfw logs on failure
+        if: failure()
+        run: |
+          find vcpkg/buildtrees/glfw3 -maxdepth 1 -type f -name 'config-*.log' -print -exec sed -n '1,200p' {} \;
 
       - name: Upload test report
         if: always()
