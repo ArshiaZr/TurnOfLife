@@ -12,7 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Cache vcpkg binaries (huge speedup after first run)
+      # Prepare + cache vcpkg binary cache
+      - name: Prepare vcpkg cache dir
+        run: |
+          mkdir -p ~/.cache/vcpkg/archives
+          echo "VCPKG_DEFAULT_BINARY_CACHE=$HOME/.cache/vcpkg/archives" >> $GITHUB_ENV
+
       - name: Cache vcpkg binary cache
         uses: actions/cache@v4
         with:
@@ -36,8 +41,6 @@ jobs:
       - name: Install raylib via vcpkg
         run: |
           ./vcpkg/vcpkg install raylib:x64-linux
-        env:
-          VCPKG_DEFAULT_BINARY_CACHE: ~/.cache/vcpkg/archives
 
       - name: Configure (CMake)
         run: |
@@ -46,8 +49,7 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE=${GITHUB_WORKSPACE}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Build
-        run: |
-          cmake --build build --config Release -j
+        run: cmake --build build --config Release -j
 
       - name: Test (CTest)
         run: |
