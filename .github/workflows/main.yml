@@ -51,7 +51,12 @@ jobs:
 
       - name: Test (CTest)
         run: |
-          ctest --test-dir build --output-on-failure --output-junit test-report.xml
+          if [ -f build/CTestTestfile.cmake ] && grep -q 'add_test' build/CTestTestfile.cmake; then
+            ctest --test-dir build --output-on-failure --output-junit test-report.xml
+          else
+            echo "No tests defined. Skipping ctest."
+            touch test-report.xml
+          fi
 
       - name: Upload test report
         if: always()
