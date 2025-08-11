@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Prepare + cache vcpkg binary cache (big speedup after first run)
       - name: Prepare vcpkg cache dir
         run: |
           mkdir -p ~/.cache/vcpkg/archives
@@ -21,10 +22,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/vcpkg/archives
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
-          restore-keys: ${{ runner.os }}-vcpkg-
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
 
-      # <-- This is the crucial bit for GLFW on Linux
+      # System packages GLFW/raylib expect even when using vcpkg
       - name: Install GLFW/X11 prerequisites
         run: |
           sudo apt-get update
@@ -39,6 +41,7 @@ jobs:
         run: |
           sudo apt-get install -y cmake ninja-build git
 
+      # vcpkg bootstrap
       - name: Bootstrap vcpkg
         run: |
           git clone https://github.com/microsoft/vcpkg.git
@@ -47,17 +50,22 @@ jobs:
         env:
           VCPKG_FORCE_SYSTEM_BINARIES: 1
 
+      # Install raylib (and deps) via vcpkg
       - name: Install raylib via vcpkg
         run: ./vcpkg/vcpkg install raylib:x64-linux
 
-      - name: Configure (CMake)
+      # Clean reconfigure to pick up any CMakeLists changes (e.g., raylib::raylib)
+      - name: Clean build dir
+        run: rm -rf build
+
+      - name: Configure (CMake + Ninja)
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_TOOLCHAIN_FILE=${GITHUB_WORKSPACE}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Build
-        run: cmake --build build --config Release -j
+        run: cmake --build build -j
 
       - name: Test (CTest)
         run: |
@@ -65,13 +73,16 @@ jobs:
             ctest --test-dir build --output-on-failure --output-junit test-report.xml
           else
             echo "No tests defined. Skipping ctest."
-            touch test-report.xml
+            printf '<testsuite name="no-tests"/>\n' > test-report.xml
           fi
 
       - name: Show vcpkg glfw logs on failure
         if: failure()
         run: |
-          find vcpkg/buildtrees/glfw3 -maxdepth 1 -type f -name 'config-*.log' -print -exec sed -n '1,200p' {} \;
+          echo "==== Dumping vcpkg glfw3 logs (if present) ===="
+          find vcpkg/buildtrees/glfw3 -maxdepth 1 -type f -name 'config-*.log' -print -exec sed -n '1,200p' {} \; || true
+          echo "==== Dumping CMake configure log (if present) ===="
+          find build -type f -name 'CMakeOutput.log' -o -name 'CMakeError.log' -print -exec sed -n '1,200p' {} \; || true
 
       - name: Upload test report
         if: always()
