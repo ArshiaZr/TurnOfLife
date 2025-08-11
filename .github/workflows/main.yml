@@ -18,8 +18,9 @@ jobs:
           sudo apt-get install -y \
             build-essential cmake ninja-build git pkg-config \
             libraylib-dev \
-            # Helpful X/OpenGL bits some raylib/glfw paths expect:
-            xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev
+            # X11/OpenGL headers commonly needed by raylib/glfw
+            xorg-dev libglu1-mesa-dev \
+            libxinerama-dev libxcursor-dev libxrandr-dev libxi-dev
 
       - name: Clean build dir
         run: rm -rf build
