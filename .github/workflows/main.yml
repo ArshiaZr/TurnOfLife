@@ -12,15 +12,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install system dependencies
+      - name: Install system dependencies (raylib via PPA)
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository -y ppa:texus/raylib
           sudo apt-get update
           sudo apt-get install -y \
             build-essential cmake ninja-build git pkg-config \
-            libraylib-dev \
-            # X11/OpenGL headers commonly needed by raylib/glfw
-            xorg-dev libglu1-mesa-dev \
-            libxinerama-dev libxcursor-dev libxrandr-dev libxi-dev
+            libraylib5-dev \
+            xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev libxrandr-dev libxi-dev
 
       - name: Clean build dir
         run: rm -rf build
