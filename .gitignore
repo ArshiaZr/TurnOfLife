@@ -40,3 +40,5 @@ bin/
 .idea
 
 .env
+
+\cmake-build-debug
